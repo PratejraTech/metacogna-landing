@@ -2,9 +2,6 @@ import React, { useState } from 'react';
 import { PaperCard, PaperBadge, PaperModal, PaperButton } from './PaperComponents';
 import { FileText, User, BookOpen, Layers, Zap, Image as ImageIcon, Loader, Download, AlertCircle, Maximize2, X, Database, Cpu, GitBranch } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
-import dotenv from 'dotenv';
-
-env = dotenv.config();
 
 const PROMPTS = [
   {

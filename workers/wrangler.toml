@@ -3,7 +3,7 @@ main = "worker.js"
 compatibility_date = "2024-06-08"
 
 [env.production]
-route = "/"
+route = "api.metacogna.ai"
 workers_dev = false
 
 [vars]
