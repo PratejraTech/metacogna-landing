@@ -1,0 +1,13 @@
+.env
+*.env
+
+# TypeScript
+*.tsbuildinfo
+*.d.ts
+/dist
+/build
+/node_modules
+out/
+# Ignore vite and bun cache
+.vite
+.bun
