@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { PaperCard, PaperBadge, PaperButton } from './PaperComponents';
-import { ArrowLeft, ExternalLink, Github, Monitor, Terminal, Cpu, Network, Zap } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Github, Monitor, Terminal, Cpu, Network, Zap, BrainCircuit } from 'lucide-react';
 
 // --- Mock Data with "Blog" flavor ---
 const GALLERY_ITEMS = [
@@ -10,11 +10,21 @@ const GALLERY_ITEMS = [
         id: 'compilar',
         title: 'Compilar',
         subtitle: 'The Sociology of Invisible Lines',
-        summary: "We spent 20 years watching people argue in meetings, then we turned it into graph theory. Compilar is an attempt to quantify the 'vibe' of a team. It visualizes the invisible coordination forces that managers pretend to control but actually just surf.",
+        summary: "The Author spent 20 years watching people argue in meetings, then turned it into graph theory. Compilar is an attempt to quantify the 'vibe' of a team. It visualizes the invisible coordination forces that managers pretend to control but actually just surf.",
         curatorNote: "Status: Ontologically Ambiguous. The graph nodes are screaming.",
         tags: ['Sociology', 'Math', 'Pain'],
         imageType: 'network', // Generative visual type
         links: { github: 'https://github.com/metacogna-lab/compilar' }
+    },
+    {
+        id: 'synapse',
+        title: 'Synapse',
+        subtitle: 'The Composite Knowledge Discovery Engine',
+        summary: "A paradigm shift from recommendation to Deep Knowledge Discovery. We fused LLMs with dynamic Knowledge Graphs to create 'Ephemeral Graph Fingerprints' of intent. It injects controlled noise (Stochastic Exploration) to combat echo chambers and builds a 'Graph of Graphs' to map relationships between disparate domains. Basically, we taught a computer to daydream effectively.",
+        curatorNote: "Tangential thinking mapped.",
+        tags: ['Graph-RAG', 'AI', 'Wisdom'],
+        imageType: 'brain',
+        links: {}
     },
     {
         id: 'neural-shadow',
@@ -60,6 +70,27 @@ const GalleryVisual: React.FC<{ type: string }> = ({ type }) => {
                     animate={{ scale: [0.9, 1.1, 0.9], rotate: [0, 5, 0] }}
                     transition={{ duration: 10, repeat: Infinity }}
                 />
+            </div>
+        );
+    }
+    if (type === 'brain') {
+        return (
+            <div className="w-full h-64 bg-purple-900 relative overflow-hidden flex items-center justify-center">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-500/20 via-transparent to-transparent" />
+                <BrainCircuit className="w-32 h-32 text-purple-300 opacity-80" />
+                <motion.div 
+                    className="absolute inset-0 flex items-center justify-center"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0, 1, 0] }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                >
+                    <div className="w-40 h-40 border border-purple-400 rounded-full opacity-50 scale-150"></div>
+                </motion.div>
+                {/* Connecting Lines */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none">
+                    <motion.line x1="50%" y1="50%" x2="20%" y2="20%" stroke="rgba(216, 180, 254, 0.5)" strokeWidth="2" strokeDasharray="5,5" animate={{ strokeDashoffset: [0, 20] }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} />
+                    <motion.line x1="50%" y1="50%" x2="80%" y2="80%" stroke="rgba(216, 180, 254, 0.5)" strokeWidth="2" strokeDasharray="5,5" animate={{ strokeDashoffset: [0, -20] }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} />
+                </svg>
             </div>
         );
     }
@@ -109,16 +140,17 @@ const ProjectGallery: React.FC<ProjectGalleryProps> = ({ onBack }) => {
             <div className="max-w-7xl mx-auto px-4 mb-16">
                 <button 
                     onClick={onBack}
-                    className="flex items-center gap-2 text-sm font-mono text-gray-500 hover:text-ink mb-8 transition-colors"
+                    className="bg-ink text-paper px-3 py-2 font-mono text-xs flex items-center gap-2 hover:bg-accent hover:text-ink transition-colors shadow-hard-sm mb-8"
                 >
-                    <ArrowLeft className="w-4 h-4" /> RETURN_TO_BASE
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>cd ../home</span>
                 </button>
 
-                <div className="border-b-4 border-ink pb-6">
+                <div className="border-b-4 border-ink pb-6 text-center">
                     <h1 className="font-serif text-6xl md:text-8xl font-bold text-ink mb-4">
                         Stuff & Things
                     </h1>
-                    <div className="flex flex-col md:flex-row justify-between items-end gap-4">
+                    <div className="flex flex-col items-center gap-4">
                         <p className="font-sans text-xl text-gray-700 dark:text-gray-300 max-w-2xl leading-relaxed italic">
                             A compendium of partially finished thoughts, over-engineered solutions, and things we built because the documentation said it was impossible.
                         </p>

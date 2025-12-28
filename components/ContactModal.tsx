@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import { PaperModal, PaperButton } from './PaperComponents';
-import { Mail, Key, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { Mail, Key, Copy, Check, ChevronDown, ChevronUp, FileDown } from 'lucide-react';
+import { generateProspectusPDF } from '../services/pdfGenerator';
 
 interface ContactModalProps {
     isOpen: boolean;
@@ -79,6 +81,12 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
                                 -----BEGIN PGP PUBLIC KEY BLOCK-----...
                             </div>
                         )}
+                    </div>
+
+                    <div className="mt-6 border-t border-dashed border-gray-400 pt-4 flex justify-center">
+                        <PaperButton onClick={generateProspectusPDF} variant="secondary" size="sm" className="w-full">
+                            <FileDown className="w-4 h-4" /> GET THE PDF
+                        </PaperButton>
                     </div>
                 </div>
 

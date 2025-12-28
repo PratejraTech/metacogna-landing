@@ -1,11 +1,13 @@
+
 import React from 'react';
 import { Terminal } from 'lucide-react';
 
 interface FooterProps {
     onContactClick: () => void;
+    onEmailClick: () => void;
 }
 
-const Footer: React.FC<FooterProps> = ({ onContactClick }) => {
+const Footer: React.FC<FooterProps> = ({ onContactClick, onEmailClick }) => {
   return (
     <footer className="border-t-2 border-ink bg-paper py-16">
       <div className="max-w-7xl mx-auto px-4 flex flex-col items-center justify-center text-center gap-8">
@@ -19,8 +21,9 @@ const Footer: React.FC<FooterProps> = ({ onContactClick }) => {
           We stay because the <span className="bg-accent text-white dark:text-ink px-1 font-bold inline-block transform -rotate-1 shadow-sm">questions</span> keep getting better.
         </p>
 
-        <div className="flex gap-6 font-mono text-sm font-bold underline decoration-1 underline-offset-4 text-ink">
+        <div className="flex flex-wrap justify-center gap-6 font-mono text-sm font-bold underline decoration-1 underline-offset-4 text-ink">
             <button onClick={onContactClick} className="hover:text-accent transition-colors uppercase">Contact</button>
+            <button onClick={onEmailClick} className="hover:text-accent transition-colors uppercase">Email Lab</button>
             <a href="https://github.com/metacogna-lab" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors uppercase">Github</a>
         </div>
         

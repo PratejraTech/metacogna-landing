@@ -1,3 +1,4 @@
+
 import React, { ButtonHTMLAttributes, InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes } from 'react';
 import { motion, HTMLMotionProps, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
@@ -53,6 +54,7 @@ interface PaperModalProps {
     onClose: () => void;
     title: string;
     children: React.ReactNode;
+    maxWidth?: string;
 }
 
 // --- Components ---
@@ -191,7 +193,7 @@ export const PaperSelect: React.FC<PaperSelectProps> = ({ label, error, options,
     );
 };
 
-export const PaperModal: React.FC<PaperModalProps> = ({ isOpen, onClose, title, children }) => {
+export const PaperModal: React.FC<PaperModalProps> = ({ isOpen, onClose, title, children, maxWidth = "max-w-lg" }) => {
     return (
         <AnimatePresence>
             {isOpen && (
@@ -207,7 +209,7 @@ export const PaperModal: React.FC<PaperModalProps> = ({ isOpen, onClose, title, 
                         initial={{ opacity: 0, scale: 0.95, y: 10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                        className="relative z-10 w-full max-w-lg"
+                        className={`relative z-10 w-full ${maxWidth} max-h-[95vh] overflow-y-auto custom-scrollbar`}
                     >
                         <PaperCard title={title} headerAction={
                             <button onClick={onClose} className="hover:text-accent transition-colors text-ink">

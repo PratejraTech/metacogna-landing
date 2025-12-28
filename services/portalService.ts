@@ -59,6 +59,9 @@ const MOCK_UPDATES: PortalUpdate[] = [
     }
 ];
 
+// In-memory store for session persistence during Fallback mode
+let SESSION_MOCK_UPDATES = [...MOCK_UPDATES];
+
 const getAuthHeaders = () => {
     const token = localStorage.getItem('metacogna_token');
     return token ? { 
@@ -70,16 +73,22 @@ const getAuthHeaders = () => {
 export const fetchUpdates = async (): Promise<PortalUpdate[]> => {
     try {
         const headers = getAuthHeaders();
-        // If no token, maybe we shouldn't even call? But let's try.
+        // If no token, default to fallback immediately
         if (!headers.Authorization) throw new Error("No token");
 
         const res = await fetch('/api/portal/updates', { headers });
-        if (!res.ok) throw new Error('API not available or Unauthorized');
-        return await res.json();
+        
+        if (!res.ok) throw new Error(`API Error: ${res.status}`);
+        
+        const data = await res.json();
+        // Sync API data to session cache
+        SESSION_MOCK_UPDATES = data;
+        return data;
+
     } catch (e) {
-        // Only return mock data if we are in dev/demo mode, otherwise return empty
-        console.warn('PORTAL: Fetch failed, using fallback data. Error:', e);
-        return new Promise(resolve => setTimeout(() => resolve(MOCK_UPDATES), 500));
+        console.warn('PORTAL: Fetch failed or Offline Mode. Using Mock Data.');
+        // Return valid promise with session data
+        return new Promise(resolve => setTimeout(() => resolve([...SESSION_MOCK_UPDATES]), 500));
     }
 };
 
@@ -90,14 +99,19 @@ export const patchUpdate = async (id: string, updates: Partial<PortalUpdate>): P
             headers: getAuthHeaders(),
             body: JSON.stringify(updates)
          });
-         if (!res.ok) throw new Error('API not available');
+         if (!res.ok) throw new Error('API Error');
          return await res.json();
     } catch (e) {
-         console.warn('PORTAL: Patch failed, using fallback.');
+         console.warn('PORTAL: Patch failed. Updating local session state.');
          return new Promise(resolve => setTimeout(() => {
-            const original = MOCK_UPDATES.find(u => u.id === id);
-            if (!original) throw new Error("Item not found");
-            resolve({ ...original, ...updates } as PortalUpdate);
+            const index = SESSION_MOCK_UPDATES.findIndex(u => u.id === id);
+            if (index === -1) throw new Error("Item not found");
+            
+            // Update local session
+            const updatedItem = { ...SESSION_MOCK_UPDATES[index], ...updates };
+            SESSION_MOCK_UPDATES[index] = updatedItem;
+            
+            resolve(updatedItem);
          }, 500));
     }
 };
@@ -112,12 +126,16 @@ export const addComment = async (id: string, comment: Comment): Promise<Comment[
         if (!res.ok) throw new Error('API Error');
         return await res.json();
     } catch (e) {
-        console.warn('PORTAL: Add comment failed, using fallback.');
-        const update = MOCK_UPDATES.find(u => u.id === id);
-        if (update) {
-            update.comments = [...(update.comments || []), comment];
-            return Promise.resolve(update.comments);
-        }
-        return Promise.reject("Not found");
+        console.warn('PORTAL: Add comment failed. Updating local session state.');
+        return new Promise(resolve => setTimeout(() => {
+            const update = SESSION_MOCK_UPDATES.find(u => u.id === id);
+            if (update) {
+                const newComments = [...(update.comments || []), comment];
+                update.comments = newComments;
+                resolve(newComments);
+            } else {
+                resolve([]);
+            }
+        }, 300));
     }
 };

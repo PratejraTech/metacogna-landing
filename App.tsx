@@ -9,6 +9,9 @@ import { PaperButton } from './components/PaperComponents';
 import LoginModal from './components/LoginModal';
 import ContactModal from './components/ContactModal';
 import HowWeWorkSection from './components/HowWeWorkSection';
+import RealityAnchor from './components/RealityAnchor';
+import HubspotTerminal from './components/HubspotTerminal';
+import Toast from './components/Toast';
 import { Menu, Github, Loader, Moon, Sun } from 'lucide-react';
 import { UserRole } from './types';
 import { exchangeGithubCode } from './services/authService';
@@ -17,6 +20,11 @@ import { exchangeGithubCode } from './services/authService';
 const PortalDashboard = lazy(() => import('./components/PortalDashboard'));
 const DecisionLog = lazy(() => import('./components/DecisionLog'));
 const ProjectGallery = lazy(() => import('./components/ProjectGallery'));
+const ServicesBase = lazy(() => import('./components/ServicesBase'));
+
+// --- Feature Flags ---
+const ENABLE_PROJECT_GRID = (import.meta as any).env?.VITE_ENABLE_PROJECT_GRID !== 'false';
+const ENABLE_METHODOLOGY = (import.meta as any).env?.VITE_ENABLE_METHODOLOGY !== 'false';
 
 const Header: React.FC<{ 
     onLoginClick: () => void; 
@@ -29,6 +37,7 @@ const Header: React.FC<{
   
   const isPortal = currentView.startsWith('portal') || currentView === 'decisions';
   const isGallery = currentView === 'gallery';
+  const isServices = currentView === 'services';
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -60,15 +69,23 @@ const Header: React.FC<{
           {!isPortal ? (
              <>
                 <button 
+                    onClick={() => onChangeView('services')} 
+                    className={`uppercase px-3 py-1 transition-all border-2 ${isServices ? 'bg-accent text-ink border-ink font-bold shadow-hard' : 'bg-ink text-paper border-transparent hover:bg-accent hover:text-ink'}`}
+                >
+                    SERVICES
+                </button>
+                <button 
                     onClick={() => onChangeView('gallery')} 
                     className={`hover:text-accent uppercase ${isGallery ? 'underline decoration-2 underline-offset-4 text-accent' : ''}`}
                 >
                     PROJECTS
                 </button>
                 {/* Only show scroll links if we are on landing page, otherwise they should probably go back to landing or just hide */}
-                {!isGallery && (
+                {!isGallery && !isServices && (
                     <>
-                        <button onClick={() => scrollToSection('methodology')} className="hover:text-accent uppercase">METHODOLOGY</button>
+                        {ENABLE_METHODOLOGY && (
+                            <button onClick={() => scrollToSection('methodology')} className="hover:text-accent uppercase">METHODOLOGY</button>
+                        )}
                         <button onClick={() => scrollToSection('about')} className="hover:text-accent uppercase">ABOUT</button>
                     </>
                 )}
@@ -115,7 +132,7 @@ const Header: React.FC<{
   );
 };
 
-type ViewState = 'landing' | 'portal' | 'decisions' | 'gallery';
+type ViewState = 'landing' | 'portal' | 'decisions' | 'gallery' | 'services';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>('landing');
@@ -124,6 +141,11 @@ const App: React.FC = () => {
   
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
+  
+  // Serious Mode States
+  const [isHubspotOpen, setIsHubspotOpen] = useState(false);
+  const [isToastVisible, setIsToastVisible] = useState(false);
+
   const [isAuthProcessing, setIsAuthProcessing] = useState(false);
   
   // Guard to prevent double execution of OAuth callback in React Strict Mode
@@ -277,7 +299,7 @@ const App: React.FC = () => {
       );
   }
 
-  // --- Render Public Views (Landing / Gallery) ---
+  // --- Render Public Views (Landing / Gallery / Services) ---
   return (
     <div className="min-h-screen flex flex-col text-ink font-sans selection:bg-accent selection:text-ink transition-colors duration-300">
       <Header 
@@ -296,20 +318,45 @@ const App: React.FC = () => {
       />
       <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
 
+      {/* Serious Mode Components */}
+      <HubspotTerminal 
+        isOpen={isHubspotOpen} 
+        onClose={() => setIsHubspotOpen(false)} 
+        onSuccess={() => { setIsHubspotOpen(false); setIsToastVisible(true); }}
+      />
+      
+      <Toast 
+        message="DISPATCHED" 
+        isVisible={isToastVisible} 
+        onClose={() => setIsToastVisible(false)} 
+      />
+      
+      <RealityAnchor onTrigger={() => setIsHubspotOpen(true)} />
+
+
       <main className="flex-grow pt-16">
         
         {currentView === 'gallery' ? (
              <Suspense fallback={
                 <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
                     <Loader className="w-8 h-8 animate-spin text-ink" />
-                    <p className="font-mono text-xs text-gray-400">LOADING_STUFF_AND_THINGS...</p>
+                    <p className="font-mono text-xs text-gray-400">LOADING_ARTIFACTS...</p>
                 </div>
              }>
                 <ProjectGallery onBack={() => { setCurrentView('landing'); window.scrollTo(0,0); }} />
              </Suspense>
+        ) : currentView === 'services' ? (
+             <Suspense fallback={
+                <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
+                    <Loader className="w-8 h-8 animate-spin text-ink" />
+                    <p className="font-mono text-xs text-gray-400">COMPILING_ARCHITECTURE...</p>
+                </div>
+             }>
+                <ServicesBase onBack={() => { setCurrentView('landing'); window.scrollTo(0,0); }} />
+             </Suspense>
         ) : (
             <>
-                <HeroSection />
+                <HeroSection onExploreServices={() => { setCurrentView('services'); window.scrollTo(0,0); }} />
                 
                 <HowWeWorkSection />
 
@@ -324,17 +371,20 @@ const App: React.FC = () => {
                 </div>
 
                 <div id="projects">
-                    <ProjectGrid isAuthenticated={!!currentUser} />
+                    {ENABLE_PROJECT_GRID && <ProjectGrid isAuthenticated={!!currentUser} />}
                 </div>
                 
-                <MethodologySection onOpenContact={() => setIsContactOpen(true)} />
+                {ENABLE_METHODOLOGY && <MethodologySection onOpenContact={() => setIsContactOpen(true)} />}
                 
                 <AboutSection isAuthenticated={!!currentUser} />
             </>
         )}
 
       </main>
-      <Footer onContactClick={() => setIsContactOpen(true)} />
+      <Footer 
+        onContactClick={() => setIsContactOpen(true)} 
+        onEmailClick={() => setIsHubspotOpen(true)}
+      />
     </div>
   );
 };

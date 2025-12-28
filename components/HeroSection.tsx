@@ -1,7 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { PaperCard, PaperBadge } from './PaperComponents';
 import { Terminal, ArrowRight, ArrowDown } from 'lucide-react';
 import { motion } from 'framer-motion';
+
+interface HeroSectionProps {
+    onExploreServices: () => void;
+}
 
 const MorphingSeparator: React.FC = () => {
   return (
@@ -20,47 +25,37 @@ const MorphingSeparator: React.FC = () => {
   );
 };
 
-const HeroSection: React.FC = () => {
+const HeroSection: React.FC<HeroSectionProps> = ({ onExploreServices }) => {
   const [typedText, setTypedText] = useState('');
+  const [isGlitching, setIsGlitching] = useState(false);
   const fullText = "> Querying system parameters...";
 
   useEffect(() => {
-    let index = 0;
-    const intervalId = setInterval(() => {
-        setTypedText(fullText.slice(0, index + 1));
-        index++;
-        if (index === fullText.length) {
-             clearInterval(intervalId);
-             // Restart loop after delay
-             setTimeout(() => {
-                 setTypedText('');
-                 index = 0;
-             }, 3000);
-        }
-    }, 50);
+    let loopId: NodeJS.Timeout;
 
-    // Better loop implementation
     const loop = () => {
         let charIndex = 0;
+        setIsGlitching(false);
         const typeInterval = setInterval(() => {
             setTypedText(fullText.slice(0, charIndex + 1));
             charIndex++;
             if (charIndex === fullText.length) {
                 clearInterval(typeInterval);
-                setTimeout(() => {
+                setIsGlitching(true);
+                
+                // Wait then restart
+                loopId = setTimeout(() => {
                     setTypedText('');
+                    setIsGlitching(false);
                     loop();
-                }, 3000);
+                }, 4000);
             }
         }, 50);
-        return typeInterval;
     };
     
-    // Clear initial interval and start loop
-    clearInterval(intervalId);
-    const loopId = loop();
+    loop();
 
-    return () => clearInterval(loopId);
+    return () => clearTimeout(loopId);
   }, []);
 
   return (
@@ -92,10 +87,10 @@ const HeroSection: React.FC = () => {
 
         <div className="mt-12 flex flex-col gap-6 items-center">
             <button 
-                onClick={() => document.getElementById('how-we-work')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={onExploreServices}
                 className="inline-block border-b-2 border-ink pb-1 font-mono text-sm text-ink hover:text-accent transition-colors font-bold tracking-wider cursor-pointer"
             >
-                EXPLORE THE LAB &darr;
+                EXPLORE LAB SERVICES &rarr;
             </button>
         </div>
       </div>
@@ -113,11 +108,14 @@ const HeroSection: React.FC = () => {
                 <div className="font-mono text-sm text-gray-700 dark:text-gray-300 leading-relaxed space-y-4">
                     <p className="text-gray-400 dark:text-gray-500 select-none"># Why do we do this?</p>
                     <p>
-                        &gt; We are motivated by a <span className="bg-accent text-paper dark:text-ink px-2 py-1 text-lg border-b-2 border-ink font-bold inline-block transform -rotate-2 shadow-sm">quiet awe</span> of the universe.
+                        > We are motivated by a <span className="bg-accent text-paper dark:text-ink px-2 py-1 text-lg border-b-2 border-ink font-bold inline-block transform -rotate-2 shadow-sm">quiet awe</span> of the universe.
                     </p>
-                    <p className="min-h-[4.5em] animate-pulse">
-                        {typedText}<span className="inline-block w-2 h-4 bg-accent ml-1 animate-ping"></span><br/>
-                    </p>
+                    <div className="min-h-[4.5em]">
+                        <span className={isGlitching ? 'glitch-text text-accent font-bold' : ''} data-text={typedText}>
+                            {typedText}
+                        </span>
+                        <span className="inline-block w-2 h-4 bg-accent ml-1 animate-ping"></span><br/>
+                    </div>
                 </div>
                 
                 {/* Connector Arrow for Desktop */}
