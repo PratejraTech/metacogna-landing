@@ -209,8 +209,8 @@ const ProjectGallery: React.FC<ProjectGalleryProps> = ({ onBack }) => {
 
                                     <div className="flex gap-4">
                                         {item.links.web && (
-                                            <PaperButton size="sm" onClick={() => window.open(item.links.web, '_blank')}>
-                                                VISIT SITE <ExternalLink className="w-3 h-3 ml-1" />
+                                            <PaperButton size="sm" variant="secondary" onClick={() => window.open(item.links.web, '_blank')}>
+                                                SITE <ExternalLink className="w-3 h-3 ml-1" />
                                             </PaperButton>
                                         )}
                                         {item.links.github && (
@@ -226,15 +226,20 @@ const ProjectGallery: React.FC<ProjectGalleryProps> = ({ onBack }) => {
                 </div>
 
                 {/* Footer of Gallery */}
-                <div className="mt-24 pt-12 border-t-2 border-dashed border-gray-400 text-center">
-                    <p className="font-serif text-2xl italic text-gray-500 mb-6">
-                        "If you aren't embarrassed by the first version of your product, you launched too late."
-                        <br/>
-                        <span className="text-sm font-mono not-italic mt-2 block">— Reid Hoffman (but we take it too literally)</span>
-                    </p>
-                    <PaperButton onClick={onBack} variant="ghost">
-                        RETURN TO HOMEPAGE
-                    </PaperButton>
+                <div className="mt-24 border-t-2 border-dashed border-gray-400 min-h-[50vh] flex flex-col relative py-12">
+                    <div className="flex-grow flex items-center justify-center max-w-4xl px-4 mx-auto text-center">
+                        <p className="font-serif text-2xl italic text-gray-500 leading-relaxed">
+                            "If you aren't embarrassed by the first version of your product, you launched too late."
+                            <br/>
+                            <span className="text-sm font-mono not-italic mt-4 block">— Reid Hoffman (but we take it too literally)</span>
+                        </p>
+                    </div>
+                    <div className="absolute bottom-0 left-0 p-6 md:p-12">
+                        <PaperButton onClick={onBack} variant="secondary">
+                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            Return (cd /)
+                        </PaperButton>
+                    </div>
                 </div>
             </div>
         </div>

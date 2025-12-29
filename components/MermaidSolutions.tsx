@@ -13,7 +13,7 @@ interface MermaidSolutionsProps {
 const MermaidSolutions: React.FC<MermaidSolutionsProps> = ({ code, onExecute, terminalLines }) => {
     return (
         <div className="w-full flex flex-col items-end gap-6">
-            <div className="w-full bg-[#1e1e1e] border-2 border-ink shadow-hard p-4 rounded-sm relative min-h-[50vh] font-mono text-sm overflow-hidden">
+            <div className="w-full bg-ink border-2 border-ink shadow-hard p-4 rounded-sm relative min-h-[50vh] font-mono text-sm overflow-hidden text-gray-300">
                 {/* Editor Header */}
                 <div className="flex items-center justify-between border-b border-gray-700 pb-2 mb-4">
                     <div className="flex gap-2">
@@ -56,7 +56,7 @@ const MermaidSolutions: React.FC<MermaidSolutionsProps> = ({ code, onExecute, te
                         <motion.div 
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
-                            className="absolute bottom-0 left-0 right-0 bg-black/95 text-green-500 p-4 font-mono text-xs border-t border-green-500 z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.5)]"
+                            className="absolute bottom-0 left-0 right-0 bg-black/95 text-accent p-4 font-mono text-xs border-t border-accent z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.5)]"
                         >
                             {terminalLines.map((line, idx) => (
                                 <div key={idx} className="mb-1">
@@ -64,7 +64,7 @@ const MermaidSolutions: React.FC<MermaidSolutionsProps> = ({ code, onExecute, te
                                     {line}
                                 </div>
                             ))}
-                            <div className="w-3 h-3 bg-green-500 inline-block animate-pulse mt-1"/>
+                            <div className="w-3 h-3 bg-accent inline-block animate-pulse mt-1"/>
                         </motion.div>
                     )}
                 </AnimatePresence>

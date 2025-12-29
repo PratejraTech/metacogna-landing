@@ -17,10 +17,10 @@ const CyclicPipeline: React.FC = () => {
     const pathData = "M 400 140 L 610 290 L 510 510 L 290 510 L 190 290 Z";
 
     return (
-        <div className="w-full bg-[#0f172a] border-4 border-ink shadow-hard relative overflow-hidden flex flex-col items-center justify-center py-12 select-none min-h-[600px]">
+        <div className="w-full bg-ink border-4 border-ink shadow-hard relative overflow-hidden flex flex-col items-center justify-center py-12 select-none min-h-[600px] text-paper">
             
             {/* Header */}
-            <div className="absolute top-0 left-0 w-full bg-[#1e293b]/90 border-b border-emerald-500/30 text-emerald-400 p-3 flex justify-between items-center z-20 backdrop-blur-sm">
+            <div className="absolute top-0 left-0 w-full bg-ink/90 border-b border-accent/30 text-accent p-3 flex justify-between items-center z-20 backdrop-blur-sm">
                 <div className="flex gap-4 font-mono text-xs">
                     <span className="flex items-center gap-2">
                         <Terminal className="w-4 h-4" />
@@ -28,15 +28,15 @@ const CyclicPipeline: React.FC = () => {
                     </span>
                     <span className="opacity-50">/// CONTINUOUS_INTEGRATION_DETECTED</span>
                 </div>
-                <div className="font-mono text-xs font-bold uppercase tracking-widest animate-pulse text-emerald-500">
+                <div className="font-mono text-xs font-bold uppercase tracking-widest animate-pulse text-accent">
                     RUNNING_CYCLE
                 </div>
             </div>
 
             {/* Grid Background */}
-            <div className="absolute inset-0 z-0 opacity-20 pointer-events-none" 
+            <div className="absolute inset-0 z-0 opacity-10 pointer-events-none" 
                  style={{ 
-                     backgroundImage: `linear-gradient(#10b981 1px, transparent 1px), linear-gradient(90deg, #10b981 1px, transparent 1px)`, 
+                     backgroundImage: `linear-gradient(var(--color-accent) 1px, transparent 1px), linear-gradient(90deg, var(--color-accent) 1px, transparent 1px)`, 
                      backgroundSize: '30px 30px' 
                  }} 
             />
@@ -48,13 +48,14 @@ const CyclicPipeline: React.FC = () => {
                     <path 
                         d={pathData} 
                         fill="none" 
-                        stroke="#1e293b" 
+                        stroke="var(--color-paper)" 
                         strokeWidth="4"
+                        className="opacity-20"
                     />
                     <path 
                         d={pathData} 
                         fill="none" 
-                        stroke="#10b981" 
+                        stroke="var(--color-accent)" 
                         strokeWidth="2" 
                         strokeDasharray="8 8"
                         className="opacity-40"
@@ -64,7 +65,7 @@ const CyclicPipeline: React.FC = () => {
                     <motion.circle 
                         r="6" 
                         fill="#ffffff" 
-                        stroke="#10b981"
+                        stroke="var(--color-accent)"
                         strokeWidth="2"
                         animate={{ offsetDistance: ["0%", "100%"] }} 
                         style={{ offsetPath: `path('${pathData}')` }} 
@@ -74,7 +75,7 @@ const CyclicPipeline: React.FC = () => {
                     {/* Secondary Particle (Opposite Phase) */}
                     <motion.circle 
                         r="4" 
-                        fill="#10b981" 
+                        fill="var(--color-accent)" 
                         animate={{ offsetDistance: ["0%", "100%"] }} 
                         style={{ offsetPath: `path('${pathData}')` }} 
                         transition={{ duration: 8, repeat: Infinity, ease: "linear", delay: 4 }} 
@@ -93,10 +94,10 @@ const CyclicPipeline: React.FC = () => {
                                 initial={{ scale: 0, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ delay: i * 0.2, type: "spring" }}
-                                className="w-full h-full flex flex-col items-center justify-center bg-[#1e293b] border-2 border-emerald-500/50 hover:border-emerald-400 hover:bg-[#1e293b]/90 hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all group cursor-default p-2 rounded-sm"
+                                className="w-full h-full flex flex-col items-center justify-center bg-ink border-2 border-accent/50 hover:border-accent hover:bg-ink/90 hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all group cursor-default p-2 rounded-sm"
                             >
-                                <node.icon className="w-6 h-6 text-emerald-500 mb-1 group-hover:scale-110 transition-transform" />
-                                <span className="font-mono text-[10px] font-bold text-white tracking-wider">
+                                <node.icon className="w-6 h-6 text-accent mb-1 group-hover:scale-110 transition-transform" />
+                                <span className="font-mono text-[10px] font-bold text-paper tracking-wider">
                                     {node.label}
                                 </span>
                             </motion.div>
@@ -106,10 +107,10 @@ const CyclicPipeline: React.FC = () => {
                     {/* Center Hub */}
                     <foreignObject x={300} y={275} width={200} height={100}>
                         <div className="w-full h-full flex flex-col items-center justify-center text-center">
-                            <div className="text-emerald-500 font-mono text-xs mb-1 animate-pulse">
+                            <div className="text-accent font-mono text-xs mb-1 animate-pulse">
                                 CORE_PROCESS
                             </div>
-                            <div className="text-white font-serif font-bold text-xl leading-none">
+                            <div className="text-paper font-serif font-bold text-xl leading-none">
                                 Negative Entropy
                             </div>
                         </div>
@@ -119,7 +120,7 @@ const CyclicPipeline: React.FC = () => {
             </div>
 
             <div className="absolute bottom-6 w-full text-center">
-                <p className="text-emerald-500/60 font-mono text-[10px] uppercase tracking-[0.2em]">
+                <p className="text-accent/60 font-mono text-[10px] uppercase tracking-[0.2em]">
                     System Architecture Loop v1.0
                 </p>
             </div>

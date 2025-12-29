@@ -51,7 +51,6 @@ const Header: React.FC<{
         onChangeView('portal');
     } else {
         onChangeView('landing');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -171,6 +170,11 @@ const App: React.FC = () => {
         localStorage.setItem('theme', 'light');
     }
   }, [isDark]);
+
+  // Scroll to top on view change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentView]);
 
   const toggleTheme = () => setIsDark(!isDark);
 
@@ -343,7 +347,7 @@ const App: React.FC = () => {
                     <p className="font-mono text-xs text-gray-400">LOADING_ARTIFACTS...</p>
                 </div>
              }>
-                <ProjectGallery onBack={() => { setCurrentView('landing'); window.scrollTo(0,0); }} />
+                <ProjectGallery onBack={() => setCurrentView('landing')} />
              </Suspense>
         ) : currentView === 'services' ? (
              <Suspense fallback={
@@ -352,11 +356,11 @@ const App: React.FC = () => {
                     <p className="font-mono text-xs text-gray-400">COMPILING_ARCHITECTURE...</p>
                 </div>
              }>
-                <ServicesBase onBack={() => { setCurrentView('landing'); window.scrollTo(0,0); }} />
+                <ServicesBase onBack={() => setCurrentView('landing')} />
              </Suspense>
         ) : (
             <>
-                <HeroSection onExploreServices={() => { setCurrentView('services'); window.scrollTo(0,0); }} />
+                <HeroSection onExploreServices={() => setCurrentView('services')} />
                 
                 <HowWeWorkSection />
 

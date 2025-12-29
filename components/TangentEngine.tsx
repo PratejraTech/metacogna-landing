@@ -1,7 +1,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Thermometer, Zap, Snowflake, Box, Grid, Plus, Atom, RotateCcw } from 'lucide-react';
+import { Thermometer, Zap, Snowflake, Box, Grid, Plus, Atom, RotateCcw, Network, X } from 'lucide-react';
+import { PaperModal } from './PaperComponents';
+import MermaidSolutions from './MermaidSolutions';
 
 // Types for the simulation
 interface Particle {
@@ -14,50 +16,51 @@ interface Particle {
     vy: number;
     color: string;
     scale: number;
+    parents?: string[]; // For graph generation
 }
 
-// Initial Data Sets (Expanded)
+// Scenario 1: Bio-Tech / Nature + Machine
+const GROUP_A: Particle[] = [
+    { id: 'mycelium', label: "Mycelium", type: 'unit', x: 20, y: 20, vx: 0.05, vy: 0.02, color: "bg-paper text-ink", scale: 1 },
+    { id: 'network', label: "Mesh Network", type: 'unit', x: 15, y: 25, vx: 0.03, vy: -0.01, color: "bg-paper text-ink", scale: 1 },
+    { id: 'growth', label: "Viral Growth", type: 'unit', x: 25, y: 15, vx: -0.02, vy: 0.04, color: "bg-paper text-ink", scale: 1 },
+];
+
+// Scenario 2: Cyber-Social / Human + Algo
+const GROUP_B: Particle[] = [
+    { id: 'social', label: "Social Graph", type: 'unit', x: 80, y: 20, vx: -0.05, vy: 0.02, color: "bg-paper text-ink", scale: 1 },
+    { id: 'algo', label: "Algorithmic Bias", type: 'unit', x: 85, y: 25, vx: -0.03, vy: -0.04, color: "bg-paper text-ink", scale: 1 },
+    { id: 'trust', label: "Zero Trust", type: 'unit', x: 75, y: 15, vx: 0.02, vy: 0.01, color: "bg-paper text-ink", scale: 1 },
+];
+
+// Scenario 3: Market-Physics / Value + Force
+const GROUP_C: Particle[] = [
+    { id: 'market', label: "Market Force", type: 'unit', x: 50, y: 80, vx: 0.01, vy: -0.05, color: "bg-paper text-ink", scale: 1 },
+    { id: 'gravity', label: "Gravity", type: 'unit', x: 45, y: 85, vx: -0.04, vy: -0.02, color: "bg-paper text-ink", scale: 1 },
+    { id: 'velocity', label: "Velocity", type: 'unit', x: 55, y: 85, vx: 0.04, vy: -0.02, color: "bg-paper text-ink", scale: 1 },
+];
+
+// Initial set combines all groups
 const INITIAL_UNITS: Particle[] = [
-    { id: 'alpha', label: "AlphaFold 3 Weights", type: 'unit', x: 10, y: 15, vx: 0.15, vy: 0.05, color: "bg-paper text-ink", scale: 1 },
-    { id: 'towel', label: "Terry Cloth Physics", type: 'unit', x: 80, y: 20, vx: -0.1, vy: 0.15, color: "bg-paper text-ink", scale: 1 },
-    { id: 'gpu', label: "H100 Grid", type: 'unit', x: 20, y: 80, vx: 0.1, vy: -0.1, color: "bg-paper text-ink", scale: 1 },
-    { id: 'origami', label: "Riemannian Geometry", type: 'unit', x: 85, y: 75, vx: -0.05, vy: -0.15, color: "bg-paper text-ink", scale: 1 },
-    { id: 'laundry', label: "Domestic Chores", type: 'unit', x: 50, y: 50, vx: 0.05, vy: 0.05, color: "bg-paper text-ink", scale: 1 },
-    { id: 'kafka', label: "Kafka Streams", type: 'unit', x: 30, y: 40, vx: 0.12, vy: -0.08, color: "bg-paper text-ink", scale: 1 },
-    { id: 'jazz', label: "Jazz Improvisation", type: 'unit', x: 60, y: 30, vx: -0.08, vy: 0.12, color: "bg-paper text-ink", scale: 1 },
-    { id: 'fungi', label: "Mycelium Network", type: 'unit', x: 40, y: 70, vx: 0.08, vy: 0.08, color: "bg-paper text-ink", scale: 1 },
-    { id: 'brutal', label: "Brutalist Concrete", type: 'unit', x: 70, y: 60, vx: -0.1, vy: -0.05, color: "bg-paper text-ink", scale: 1 },
-    // New Particles
-    { id: 'quantum', label: "Quantum Entanglement", type: 'unit', x: 15, y: 35, vx: 0.09, vy: -0.04, color: "bg-paper text-ink", scale: 1 },
-    { id: 'sourdough', label: "Sourdough Starter", type: 'unit', x: 75, y: 85, vx: -0.06, vy: 0.03, color: "bg-paper text-ink", scale: 1 },
-    { id: 'supply', label: "Supply Chain", type: 'unit', x: 55, y: 10, vx: 0.04, vy: 0.1, color: "bg-paper text-ink", scale: 1 },
-    { id: 'dopamine', label: "Dopamine Receptors", type: 'unit', x: 25, y: 65, vx: -0.07, vy: -0.09, color: "bg-paper text-ink", scale: 1 },
-    { id: 'synth', label: "Vintage Synths", type: 'unit', x: 90, y: 45, vx: -0.1, vy: 0.02, color: "bg-paper text-ink", scale: 1 },
+    ...GROUP_A, 
+    ...GROUP_B, 
+    ...GROUP_C,
+    { id: 'chaos', label: "Entropy", type: 'unit', x: 50, y: 50, vx: 0.05, vy: -0.05, color: "bg-paper text-ink", scale: 1 }
 ];
 
+// Recipes that lead to the "3 Coalesced Core Ideas"
 const MERGE_RECIPES = [
-    { ingredients: ['alpha', 'towel'], result: { label: "Predictive Linen Folding", color: "bg-gray-100 text-ink" } },
-    { ingredients: ['gpu', 'laundry'], result: { label: "High-Performance Washing", color: "bg-gray-100 text-ink" } },
-    { ingredients: ['origami', 'towel'], result: { label: "Topo-Textiles", color: "bg-gray-100 text-ink" } },
-    { ingredients: ['kafka', 'jazz'], result: { label: "Event-Driven Syncopation", color: "bg-gray-100 text-ink" } },
-    { ingredients: ['fungi', 'gpu'], result: { label: "Biological Compute", color: "bg-gray-100 text-ink" } },
-    { ingredients: ['brutal', 'origami'], result: { label: "Folded Concrete Structures", color: "bg-gray-100 text-ink" } },
-    { ingredients: ['jazz', 'laundry'], result: { label: "Rhythmic Tumbling", color: "bg-gray-100 text-ink" } },
-    // New Recipes
-    { ingredients: ['quantum', 'supply'], result: { label: "Teleportation Logistics", color: "bg-gray-100 text-ink" } },
-    { ingredients: ['sourdough', 'fungi'], result: { label: "Hyper-Active Yeast", color: "bg-gray-100 text-ink" } },
-    { ingredients: ['synth', 'jazz'], result: { label: "Analog Improvisation", color: "bg-gray-100 text-ink" } },
-    { ingredients: ['dopamine', 'gpu'], result: { label: "Addictive Compute", color: "bg-gray-100 text-ink" } },
-    { ingredients: ['brutal', 'sourdough'], result: { label: "Edible Architecture", color: "bg-gray-100 text-ink" } },
-];
+    // Group A -> "Bio-Digital Fabric"
+    { ingredients: ['mycelium', 'network'], result: { label: "Bio-Computing", color: "bg-gray-800 text-green-400 border-green-400" } },
+    { ingredients: ['growth', 'Bio-Computing'], result: { label: "CORE: BIO-DIGITAL FABRIC", color: "bg-accent text-ink border-white shadow-hard" } },
+    
+    // Group B -> "Synthetic Sociology"
+    { ingredients: ['social', 'algo'], result: { label: "Echo Chamber", color: "bg-gray-800 text-green-400 border-green-400" } },
+    { ingredients: ['trust', 'Echo Chamber'], result: { label: "CORE: SYNTHETIC SOCIOLOGY", color: "bg-accent text-ink border-white shadow-hard" } },
 
-const EPIPHANIES = [
-    "The Optimal Towel State",
-    "Self-Organizing Laundry",
-    "Entropic Fabric Singularity",
-    "Sentient Concrete",
-    "Fungal Cloud Infrastructure",
-    "Infinite Bread Loops"
+    // Group C -> "Economic Physics"
+    { ingredients: ['market', 'gravity'], result: { label: "Asset Heaviness", color: "bg-gray-800 text-green-400 border-green-400" } },
+    { ingredients: ['velocity', 'Asset Heaviness'], result: { label: "CORE: ECONOMIC PHYSICS", color: "bg-accent text-ink border-white shadow-hard" } },
 ];
 
 interface TangentEngineProps {
@@ -67,112 +70,176 @@ interface TangentEngineProps {
 const TangentEngine: React.FC<TangentEngineProps> = ({ mode = 'BUSINESS' }) => {
     const [temperature, setTemperature] = useState(0); 
     const [particles, setParticles] = useState<Particle[]>(INITIAL_UNITS);
+    const [hoveredParticle, setHoveredParticle] = useState<Particle | null>(null);
+    const [isGraphOpen, setIsGraphOpen] = useState(false);
+    const [graphCode, setGraphCode] = useState('');
+    
     const containerRef = useRef<HTMLDivElement>(null);
     const requestRef = useRef<number | null>(null);
+    const tempIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Helper to determine phase based on temperature
     const getPhase = (temp: number) => {
-        if (temp > 80) return { label: "PHASE 3: SUBLIMATION", desc: "Solid -> Gas. Epiphanies form.", icon: Zap, color: "text-red-500" };
-        if (temp > 40) return { label: "PHASE 2: FUSION", desc: "Collisions create new compounds.", icon: Atom, color: "text-orange-500" };
-        return { label: "PHASE 1: LATTICE", desc: "Static concepts. Potential energy only.", icon: Snowflake, color: "text-blue-500" };
+        if (temp > 80) return { label: "CHAOS", desc: "Handwritten Reality.", icon: Zap, color: "text-red-500", borderColor: "border-red-500" };
+        if (temp > 30) return { label: "FLUX", desc: "Ideas liquefy.", icon: Atom, color: "text-orange-500", borderColor: "border-orange-500" };
+        return { label: "ORDER", desc: "Static Lattice.", icon: Snowflake, color: "text-blue-500", borderColor: "border-blue-500" };
     };
 
     const phase = getPhase(temperature);
 
-    // Physics Loop
+    const generateGraph = () => {
+        let code = "graph TD\n";
+        code += "    classDef default fill:#000000,stroke:#10b981,stroke-width:1px,font-family:monospace,color:#10b981;\n";
+        code += "    classDef core fill:#10b981,stroke:#ffffff,stroke-width:2px,color:#000000,font-weight:bold;\n";
+        
+        const sanitize = (str: string) => str.replace(/[^a-zA-Z0-9]/g, '_');
+
+        particles.forEach(p => {
+            const id = sanitize(p.id);
+            const label = p.label;
+            
+            if (p.label.startsWith("CORE:")) {
+                code += `    ${id}["${label}"]:::core\n`;
+            } else if (p.type === 'merged') {
+                code += `    ${id}["${label}"]\n`;
+            } else {
+                code += `    ${id}["${label}"]\n`;
+            }
+
+            if (p.parents) {
+                p.parents.forEach(parentLabel => {
+                    const parentId = sanitize(parentLabel);
+                    code += `    ${parentId} --> ${id}\n`;
+                });
+            }
+        });
+        
+        setGraphCode(code);
+    };
+
+    // Automated Heating Effect
+    useEffect(() => {
+        // Reset particles on mount
+        setParticles(INITIAL_UNITS.map(p => ({ ...p }))); // Deep copy
+        setTemperature(0);
+
+        // Start heating loop
+        tempIntervalRef.current = setInterval(() => {
+            setTemperature(prev => {
+                if (prev >= 95) {
+                    if (tempIntervalRef.current) clearInterval(tempIntervalRef.current);
+                    return 95;
+                }
+                return prev + 0.5; // slow increase over ~190 steps (approx 10s at 50ms)
+            });
+        }, 100);
+
+        return () => {
+            if (tempIntervalRef.current) clearInterval(tempIntervalRef.current);
+        };
+    }, []);
+
     const updatePhysics = () => {
         setParticles(prevParticles => {
-            // Create mutable working copy
             let workingParticles = prevParticles.map(p => ({ ...p }));
             const count = workingParticles.length;
 
-            // 1. REPULSION / REBOUND LOGIC
-            // Apply forces to avoid sticking
+            // 1. REPULSION & ATTRACTION
             for (let i = 0; i < count; i++) {
                 for (let j = i + 1; j < count; j++) {
                     const p1 = workingParticles[i];
                     const p2 = workingParticles[j];
-                    
                     const dx = p1.x - p2.x;
                     const dy = p1.y - p2.y;
                     const distSq = dx*dx + dy*dy;
                     
-                    // Repulsion radius (percentage of container width roughly)
-                    // Increased radius to create more vigorous bounce
-                    const repulsionRadius = 15; 
-                    const repulsionSq = repulsionRadius * repulsionRadius;
-
-                    if (distSq < repulsionSq && distSq > 0.01) {
+                    // Repulsion (Prevent Overlap)
+                    const repulsionRadius = 8; 
+                    if (distSq < repulsionRadius * repulsionRadius && distSq > 0.01) {
                         const dist = Math.sqrt(distSq);
-                        // Force increases closer they are
-                        const force = (repulsionRadius - dist) * 0.08; // Strong rebound factor
-                        
+                        const force = (repulsionRadius - dist) * 0.1;
                         const fx = (dx / dist) * force;
                         const fy = (dy / dist) * force;
+                        p1.vx += fx; p1.vy += fy;
+                        p2.vx -= fx; p2.vy -= fy;
+                    }
 
-                        p1.vx += fx;
-                        p1.vy += fy;
-                        p2.vx -= fx;
-                        p2.vy -= fy;
+                    // Attraction (Recipe-based)
+                    if (temperature > 20) {
+                        // Check if they form a recipe
+                        const isRecipe = MERGE_RECIPES.some(r => 
+                            (r.ingredients.includes(p1.id) || r.ingredients.includes(p1.label)) && 
+                            (r.ingredients.includes(p2.id) || r.ingredients.includes(p2.label))
+                        );
+                        
+                        if (isRecipe) {
+                            const attractionForce = 0.03; // Strong pull
+                            const dist = Math.sqrt(distSq) || 1;
+                            const fx = (dx / dist) * attractionForce;
+                            const fy = (dy / dist) * attractionForce;
+                            p1.vx -= fx; p1.vy -= fy;
+                            p2.vx += fx; p2.vy += fy;
+                        }
                     }
                 }
             }
 
-            // 2. MOVEMENT & STATE LOGIC
+            // 2. MOVEMENT & WALLS & CORE BOUNCE
             let nextParticles = workingParticles.map(p => {
-                // Friction / Damping to prevent explosion from repulsion
-                p.vx *= 0.95;
-                p.vy *= 0.95;
+                // Apply constant "Ambient Heat"
+                const ambientX = (Math.random() - 0.5) * 0.01;
+                const ambientY = (Math.random() - 0.5) * 0.01;
+                p.vx += ambientX;
+                p.vy += ambientY;
 
-                // Base movement speed depends on temperature
-                // At temp 0, speedMult is 0, but repulsion might still nudge them if they overlap
-                let speedMult = temperature * 0.008;
+                const friction = 0.9 + (temperature * 0.0009); 
+                p.vx *= Math.min(0.99, friction);
+                p.vy *= Math.min(0.99, friction);
                 
-                // UNIFICATION LOGIC: Epiphanies float to Top Center
-                if (p.type === 'epiphany') {
-                    const targetX = 50;
-                    const targetY = 15; // Top Center
-                    
-                    // Attraction Force
-                    p.vx += (targetX - p.x) * 0.05;
-                    p.vy += (targetY - p.y) * 0.05;
-                    
-                    // Strong damping to stop at target
-                    p.vx *= 0.8;
-                    p.vy *= 0.8;
-                    
-                    // Epiphanies move independently of temperature
-                    speedMult = 0.2; 
-                } 
-                
-                let nx = p.x + p.vx * speedMult;
-                let ny = p.y + p.vy * speedMult;
-
-                // Bounce off walls (Standard & Merged)
-                if (p.type !== 'epiphany') {
-                    if (nx <= 5 || nx >= 95) p.vx *= -1;
-                    if (ny <= 5 || ny >= 95) p.vy *= -1;
-
-                    // Keep in bounds
-                    nx = Math.max(5, Math.min(95, nx));
-                    ny = Math.max(5, Math.min(95, ny));
-
-                    // Jitter at high temp
-                    if (temperature > 70) {
-                        nx += (Math.random() - 0.5) * 0.5; 
-                        ny += (Math.random() - 0.5) * 0.5;
-                    }
-                } else {
-                    // Epiphany bounds (looser to allow exit if needed, but mainly for centering)
-                    nx = Math.max(0, Math.min(100, nx));
-                    ny = Math.max(0, Math.min(100, ny));
+                if (temperature > 50) {
+                    p.vx += (Math.random() - 0.5) * 0.05; 
+                    p.vy += (Math.random() - 0.5) * 0.05;
                 }
+                
+                // BOUNCE OFF CENTRAL CORE
+                // Core is at 50,50 with radius approx 15% (visual) but let's say 12% physics radius
+                const dxCore = p.x - 50;
+                const dyCore = p.y - 50;
+                const distCore = Math.sqrt(dxCore*dxCore + dyCore*dyCore);
+                const coreRadius = 12; 
+                
+                if (distCore < coreRadius) {
+                    // Normalize and reflect
+                    const nx = dxCore / distCore;
+                    const ny = dyCore / distCore;
+                    
+                    // Push out
+                    p.x = 50 + nx * (coreRadius + 1);
+                    p.y = 50 + ny * (coreRadius + 1);
+                    
+                    // Reflect velocity vector
+                    const dot = p.vx * nx + p.vy * ny;
+                    p.vx = p.vx - 2 * dot * nx;
+                    p.vy = p.vy - 2 * dot * ny;
+                    
+                    // Add some energy on bounce
+                    p.vx *= 1.2;
+                    p.vy *= 1.2;
+                }
+
+                let nx = p.x + p.vx;
+                let ny = p.y + p.vy;
+
+                // Bounce off walls
+                if (nx <= 2 || nx >= 98) p.vx *= -1;
+                if (ny <= 2 || ny >= 98) p.vy *= -1;
+                nx = Math.max(2, Math.min(98, nx));
+                ny = Math.max(2, Math.min(98, ny));
 
                 return { ...p, x: nx, y: ny };
             });
 
-            // 3. COLLISION & MERGE LOGIC (Only > 40 Temp)
-            if (temperature > 40) {
+            // 3. COLLISION & MERGE LOGIC
+            if (temperature > 30) {
                 const mergedIndices = new Set<number>();
                 const newParticles: Particle[] = [];
 
@@ -180,155 +247,128 @@ const TangentEngine: React.FC<TangentEngineProps> = ({ mode = 'BUSINESS' }) => {
                     if (mergedIndices.has(i)) continue;
                     for (let j = i + 1; j < nextParticles.length; j++) {
                         if (mergedIndices.has(j)) continue;
-
                         const p1 = nextParticles[i];
                         const p2 = nextParticles[j];
                         
-                        // Epiphany Merging (Singularity)
-                        if (p1.type === 'epiphany' && p2.type === 'epiphany') {
-                             const dx = p1.x - p2.x;
-                             const dy = p1.y - p2.y;
-                             if (Math.sqrt(dx*dx + dy*dy) < 10) {
-                                 mergedIndices.add(i);
-                                 mergedIndices.add(j);
-                                 newParticles.push({
-                                     ...p1,
-                                     id: `singularity-${Date.now()}`,
-                                     label: "TOTALITY", // The Single State
-                                     scale: Math.min(3, p1.scale + 0.5), // Grow bigger
-                                     x: 50,
-                                     y: 15
-                                 });
-                             }
-                             continue;
-                        }
-
-                        // Standard Merging
-                        if (p1.type === 'epiphany' || p2.type === 'epiphany') continue; // Don't merge epiphany with normal
+                        // Don't merge final cores together
+                        if (p1.label.startsWith("CORE:") || p2.label.startsWith("CORE:")) continue;
 
                         const dx = p1.x - p2.x;
                         const dy = p1.y - p2.y;
                         const dist = Math.sqrt(dx*dx + dy*dy);
 
-                        // Merge radius needs to be smaller than repulsion radius so they "fight" to merge
-                        if (dist < 8) {
-                            // Check recipes
+                        if (dist < 5) { // Collision threshold
+                            // Check recipe by ID or Label (since merged particles have dynamic IDs)
                             const recipe = MERGE_RECIPES.find(r => 
-                                (r.ingredients.includes(p1.id) && r.ingredients.includes(p2.id)) ||
-                                (p1.type === 'unit' && p2.type === 'unit') // Generic merge fallback
+                                (r.ingredients.includes(p1.id) || r.ingredients.includes(p1.label)) && 
+                                (r.ingredients.includes(p2.id) || r.ingredients.includes(p2.label))
                             );
 
-                            if (recipe || (p1.type === 'unit' && p2.type === 'unit')) {
+                            if (recipe) {
                                 mergedIndices.add(i);
                                 mergedIndices.add(j);
-                                
                                 newParticles.push({
                                     id: `merged-${Date.now()}-${i}`,
-                                    label: recipe ? recipe.result.label : `${p1.label.split(' ')[0]} + ${p2.label.split(' ')[0]}`,
-                                    type: 'merged',
+                                    label: recipe.result.label,
+                                    type: recipe.result.label.startsWith("CORE:") ? 'epiphany' : 'merged',
                                     x: (p1.x + p2.x) / 2,
                                     y: (p1.y + p2.y) / 2,
                                     vx: (p1.vx + p2.vx) / 2,
                                     vy: (p1.vy + p2.vy) / 2,
-                                    color: recipe ? recipe.result.color : 'bg-gray-100 text-ink',
-                                    scale: 1.2
+                                    color: recipe.result.color,
+                                    scale: recipe.result.label.startsWith("CORE:") ? 2 : 1.2,
+                                    parents: [p1.label, p2.label]
                                 });
+                            } else {
+                                // Elastic Collision (Bounce) for non-recipe matches
+                                const angle = Math.atan2(dy, dx);
+                                const speed1 = Math.sqrt(p1.vx*p1.vx + p1.vy*p1.vy);
+                                const speed2 = Math.sqrt(p2.vx*p2.vx + p2.vy*p2.vy);
+                                p1.vx = -Math.cos(angle) * speed1;
+                                p1.vy = -Math.sin(angle) * speed1;
+                                p2.vx = Math.cos(angle) * speed2;
+                                p2.vy = Math.sin(angle) * speed2;
                             }
                         }
                     }
                 }
-
-                // Filter out merged, add new
                 nextParticles = nextParticles.filter((_, i) => !mergedIndices.has(i)).concat(newParticles);
-            }
-
-            // EXPLOSION LOGIC (Only > 80 Temp)
-            if (temperature > 85) {
-                nextParticles = nextParticles.map(p => {
-                    if (p.type === 'merged' && Math.random() > 0.98) { // Slower explosion rate
-                        return {
-                            ...p,
-                            type: 'epiphany',
-                            label: EPIPHANIES[Math.floor(Math.random() * EPIPHANIES.length)],
-                            color: 'bg-accent text-ink',
-                            scale: 1.5,
-                            vx: 0,
-                            vy: 0
-                        };
-                    }
-                    return p;
-                });
             }
 
             return nextParticles;
         });
-
         requestRef.current = requestAnimationFrame(updatePhysics);
     };
 
     useEffect(() => {
         requestRef.current = requestAnimationFrame(updatePhysics);
-        return () => {
-            if (requestRef.current) cancelAnimationFrame(requestRef.current);
-        };
+        return () => { if (requestRef.current) cancelAnimationFrame(requestRef.current); };
     }, [temperature]);
 
     const resetSimulation = () => {
-        setParticles(INITIAL_UNITS);
+        setParticles(INITIAL_UNITS.map(p => ({ ...p })));
         setTemperature(0);
+        // Restart automation
+        if (tempIntervalRef.current) clearInterval(tempIntervalRef.current);
+        tempIntervalRef.current = setInterval(() => {
+            setTemperature(prev => {
+                if (prev >= 95) {
+                    if (tempIntervalRef.current) clearInterval(tempIntervalRef.current);
+                    return 95;
+                }
+                return prev + 0.5; 
+            });
+        }, 100);
     };
 
     return (
-        <div className="bg-surface relative overflow-hidden min-h-[600px] border-none shadow-none flex flex-col">
+        <div className="bg-black relative overflow-hidden min-h-[700px] border-none shadow-none flex flex-col font-sans">
             
-            {/* Neo-Brutalist Control Panel */}
-            <div className="bg-ink text-paper p-6 border-b-4 border-accent relative z-20 flex-none shadow-hard">
+            {/* Control Panel */}
+            <div className="bg-black text-white p-6 border-b-2 border-accent relative z-20 flex-none shadow-xl">
                 <div className="flex flex-col md:flex-row justify-between items-end gap-6">
                     <div>
                         <div className="flex items-center gap-2 mb-2">
                             <Grid className="w-4 h-4 text-accent animate-pulse" />
-                            <span className="font-mono text-xs font-bold tracking-widest uppercase text-accent border border-accent px-1">
-                                TANGENT_ENGINE_V2.0
+                            <span className="font-mono text-xs font-bold tracking-widest uppercase text-accent border border-accent px-1 bg-accent/10">
+                                TANGENT_ENGINE_V2.0 // NEUROPUNK_EDITION
                             </span>
                         </div>
-                        <h2 className="font-serif text-3xl font-bold leading-none relative">
+                        <h2 className="font-serif text-3xl font-bold leading-none relative text-white">
                             Collision Detector
-                            {/* "Increase Entropy" label positioned relative to title/controls as requested */}
                             <span className="absolute -top-6 -right-0 md:left-full md:ml-4 md:top-0 w-max font-mono text-[10px] text-accent border border-accent px-2 py-0.5 opacity-80 animate-pulse hidden md:block">
-                                ← INCREASE ENTROPY
+                                ← AUTO_ENTROPY_RISING
                             </span>
                         </h2>
                     </div>
 
-                    {/* Industrial Slider */}
+                    {/* Slider */}
                     <div className="w-full md:w-1/2 flex flex-col gap-2">
                         <div className="flex justify-between items-end">
                             <span className="font-mono text-[10px] font-bold uppercase text-gray-500 tracking-widest">
                                 Thermodynamic Control
                             </span>
                             <span className="font-mono text-[10px] font-bold uppercase text-accent tracking-widest animate-pulse">
-                                Increase Entropy ↘
+                                {phase.label} SEQUENCE ACTIVE ↘
                             </span>
                         </div>
                         
-                        <div className="w-full p-4 border-2 border-gray-700 bg-[#111] shadow-inner relative">
-                            {/* Scale Marks */}
+                        <div className="w-full p-4 border border-gray-800 bg-[#0a0a0a] shadow-inner relative group">
                             <div className="absolute top-0 left-0 w-full h-full pointer-events-none flex justify-between px-4">
-                                <div className="h-full w-px bg-gray-800"></div>
-                                <div className="h-full w-px bg-gray-800"></div>
-                                <div className="h-full w-px bg-gray-800"></div>
-                                <div className="h-full w-px bg-gray-800"></div>
+                                <div className="h-full w-px bg-gray-900 group-hover:bg-accent/20 transition-colors"></div>
+                                <div className="h-full w-px bg-gray-900 group-hover:bg-accent/20 transition-colors"></div>
+                                <div className="h-full w-px bg-gray-900 group-hover:bg-accent/20 transition-colors"></div>
                             </div>
 
                             <div className="flex justify-between items-center mb-3 font-mono text-xs relative z-10">
-                                <span className="text-blue-400 font-bold flex items-center gap-1">
-                                    <Snowflake className="w-3 h-3" /> LATTICE (0K)
+                                <span className={`font-bold flex items-center gap-1 ${temperature < 30 ? 'text-blue-400' : 'text-gray-700'}`}>
+                                    <Snowflake className="w-3 h-3" /> ORDER
                                 </span>
-                                <span className={`font-bold transition-colors ${phase.color}`}>
-                                    CURRENT_TEMP: {temperature * 10}K
+                                <span className={`font-bold transition-all ${phase.color} text-lg`}>
+                                    {Math.round(temperature)}%
                                 </span>
-                                <span className="text-red-500 font-bold flex items-center gap-1">
-                                    <Zap className="w-3 h-3" /> PLASMA (1000K)
+                                <span className={`font-bold flex items-center gap-1 ${temperature > 80 ? 'text-red-500' : 'text-gray-700'}`}>
+                                    <Zap className="w-3 h-3" /> CHAOS
                                 </span>
                             </div>
                             
@@ -338,27 +378,49 @@ const TangentEngine: React.FC<TangentEngineProps> = ({ mode = 'BUSINESS' }) => {
                                 max="100" 
                                 value={temperature}
                                 onChange={(e) => setTemperature(parseInt(e.target.value))}
-                                className="w-full h-4 bg-gray-800 rounded-none appearance-none cursor-pointer accent-accent relative z-10 border border-gray-600 focus:outline-none focus:border-accent"
+                                className="w-full h-2 bg-gray-800 rounded-none appearance-none cursor-pointer accent-accent relative z-10 border border-gray-700 focus:outline-none focus:border-accent"
                             />
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Visualization Arena */}
-            <div ref={containerRef} className="relative w-full flex-grow bg-surface overflow-hidden transition-colors duration-500">
+            {/* Arena */}
+            <div ref={containerRef} className="relative w-full flex-grow bg-black overflow-hidden transition-colors duration-500 flex items-center justify-center">
                 
-                {/* Background Grid Pattern */}
+                {/* Neuropunk Grid */}
                 <div 
-                    className="absolute inset-0 bg-[linear-gradient(rgba(24,24,27,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(24,24,27,0.1)_1px,transparent_1px)] bg-[length:40px_40px] pointer-events-none transition-opacity duration-700"
-                    style={{ opacity: 1 - (temperature / 150) }}
+                    className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.1)_1px,transparent_1px)] bg-[length:50px_50px] pointer-events-none"
+                    style={{ 
+                        opacity: 0.2 + (temperature / 200),
+                        filter: `blur(${temperature > 80 ? '1px' : '0px'})`
+                    }}
                 />
 
-                {/* High Temp Noise Overlay */}
+                {/* Glitch Overlay */}
                 <div 
-                    className="absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-700 mix-blend-overlay bg-red-900/20"
-                    style={{ opacity: (temperature > 80 ? 0.3 : 0) }}
+                    className="absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-100 mix-blend-color-dodge bg-red-900/30"
+                    style={{ 
+                        opacity: (temperature > 85 && Math.random() > 0.8 ? 0.2 : 0),
+                        transform: `translate(${Math.random() * 4}px, ${Math.random() * 4}px)`
+                    }}
                 />
+
+                {/* --- CENTRAL CORE --- */}
+                <div 
+                    onClick={() => { generateGraph(); setIsGraphOpen(true); }}
+                    className="absolute z-0 w-32 h-32 border border-accent/50 bg-black/80 backdrop-blur-md flex items-center justify-center cursor-pointer group shadow-[0_0_30px_rgba(16,185,129,0.1)] hover:shadow-[0_0_50px_rgba(16,185,129,0.3)] transition-all duration-500 rounded-full"
+                >
+                    <div className="absolute inset-0 border border-accent opacity-30 scale-125 animate-[spin_10s_linear_infinite]" />
+                    <div className="absolute inset-0 border border-accent opacity-20 scale-150 animate-[spin_15s_linear_infinite_reverse]" />
+                    
+                    <div className="text-center group-hover:scale-110 transition-transform">
+                        <Network className="w-8 h-8 text-accent mx-auto mb-2" />
+                        <span className="font-mono text-[10px] text-accent font-bold uppercase tracking-widest block">
+                            CORE_LOGIC
+                        </span>
+                    </div>
+                </div>
 
                 {/* Particles */}
                 <AnimatePresence>
@@ -367,11 +429,13 @@ const TangentEngine: React.FC<TangentEngineProps> = ({ mode = 'BUSINESS' }) => {
                             key={p.id}
                             layoutId={p.id}
                             initial={{ scale: 0 }}
+                            onMouseEnter={() => setHoveredParticle(p)}
+                            onMouseLeave={() => setHoveredParticle(null)}
                             animate={{ 
                                 left: `${p.x}%`, 
                                 top: `${p.y}%`,
                                 scale: p.scale + (temperature > 80 ? Math.random() * 0.1 : 0),
-                                rotate: temperature > 60 ? [0, 2, -2, 0] : 0,
+                                rotate: temperature > 70 ? [0, 5, -5, 0] : 0,
                                 x: '-50%',
                                 y: '-50%'
                             }}
@@ -382,43 +446,40 @@ const TangentEngine: React.FC<TangentEngineProps> = ({ mode = 'BUSINESS' }) => {
                             }}
                             className={`
                                 absolute flex flex-col items-center justify-center text-center cursor-pointer transition-colors duration-300
-                                border-2 border-ink shadow-hard
+                                border-2 shadow-lg
                                 ${p.type === 'epiphany' 
-                                    ? 'z-50 w-64 h-auto p-6 bg-accent border-4 shadow-hard-hover' 
+                                    ? 'z-50 w-auto min-w-[120px] p-4 bg-accent border-white shadow-[0_0_20px_#10b981]' 
                                     : p.type === 'merged'
-                                        ? 'z-20 w-40 h-24 p-2 rounded-full border-dashed bg-paper'
-                                        : 'z-10 w-32 h-20 p-2 bg-paper'
+                                        ? 'z-20 w-auto min-w-[80px] p-2 rounded-sm border-dashed border-accent bg-gray-900/90'
+                                        : 'z-10 w-auto min-w-[60px] p-1 bg-white border-ink'
                                 }
                                 ${p.color}
                             `}
                         >
                             <div className="pointer-events-none relative z-10">
-                                {p.type === 'unit' && (
-                                    <div className="text-[9px] font-mono uppercase tracking-wider text-gray-400 mb-1 border-b border-gray-200 pb-1">
-                                        UNIT_ID: {p.id.substring(0,3).toUpperCase()}
-                                    </div>
-                                )}
-                                
-                                {p.type === 'merged' && (
-                                    <div className="text-[9px] font-mono font-bold text-gray-500 mb-1 flex items-center justify-center gap-1">
-                                        <Plus className="w-3 h-3" /> COMPOUND
-                                    </div>
-                                )}
-                                
+                                {/* Type Label */}
                                 {p.type === 'epiphany' && (
-                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-ink text-paper px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-widest border border-accent">
-                                        {p.label === "TOTALITY" ? "SINGULARITY" : "EPIPHANY"}
+                                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black text-accent px-2 py-0.5 text-[8px] font-mono font-bold uppercase tracking-widest border border-accent whitespace-nowrap">
+                                        EPIPHANY_DETECTED
                                     </div>
                                 )}
                                 
-                                <div className={`font-bold leading-tight ${p.type === 'epiphany' ? 'text-xl font-serif text-ink' : 'text-xs font-sans text-ink'}`}>
+                                {/* Text Content - Chaos vs Order - Style Persistence */}
+                                <div className={`font-bold leading-tight whitespace-nowrap px-1 
+                                    ${p.type === 'unit' && temperature > 70
+                                        ? 'font-hand text-xl rotate-1' // Chaos Font Mode
+                                        : p.type === 'epiphany'
+                                            ? 'font-mono text-xs text-black uppercase tracking-widest' // Order Font
+                                            : 'font-sans text-[10px]' // Neutral / Standard
+                                    }
+                                `}>
                                     {p.label}
                                 </div>
                             </div>
-
-                            {/* Glitch Effect for Epiphanies */}
-                            {p.type === 'epiphany' && (
-                                <div className="absolute inset-0 border-2 border-white opacity-20 animate-pulse" />
+                            
+                            {/* Merge Indicator */}
+                            {p.type === 'merged' && (
+                                <Plus className="w-3 h-3 text-accent absolute -right-1 -bottom-1 bg-black rounded-full p-0.5" />
                             )}
                         </motion.div>
                     ))}
@@ -426,31 +487,39 @@ const TangentEngine: React.FC<TangentEngineProps> = ({ mode = 'BUSINESS' }) => {
 
                 {/* Reset Button */}
                 {particles.some(p => p.type === 'epiphany') && (
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[60]">
+                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[60]">
                         <motion.button 
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
+                            initial={{ scale: 0, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
                             onClick={resetSimulation}
-                            className="bg-ink text-paper px-8 py-4 font-mono font-bold text-lg shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:translate-y-1 hover:shadow-none transition-all border-2 border-paper flex items-center gap-3"
+                            className="bg-black text-accent px-6 py-3 font-mono font-bold text-xs shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] transition-all border border-accent flex items-center gap-3 uppercase tracking-widest hover:bg-accent hover:text-black"
                         >
-                            <RotateCcw className="w-5 h-5" />
-                            RESET_ENTROPY
+                            <RotateCcw className="w-4 h-4" />
+                            System_Reset
                         </motion.button>
                     </div>
                 )}
 
-                {/* Phase Indicator Overlay */}
-                <div className="absolute bottom-6 right-6 bg-paper border-2 border-ink p-4 shadow-hard z-30 flex items-center gap-4 max-w-xs">
-                     <div className={`p-2 border-2 border-ink ${phase.color === 'text-red-500' ? 'bg-red-100' : 'bg-gray-50'}`}>
-                        <phase.icon className={`w-6 h-6 ${phase.color}`} />
-                     </div>
-                     <div>
-                        <div className={`font-mono text-xs font-bold uppercase tracking-widest ${phase.color}`}>{phase.label}</div>
-                        <div className="font-sans text-xs text-gray-600 leading-tight mt-1">{phase.desc}</div>
-                     </div>
-                </div>
-
             </div>
+
+            {/* Mermaid Graph Modal */}
+            <PaperModal
+                isOpen={isGraphOpen}
+                onClose={() => setIsGraphOpen(false)}
+                title="GENERATED_TOPOLOGY_GRAPH"
+                maxWidth="max-w-4xl"
+            >
+                <div className="flex flex-col gap-4 bg-black p-4 border border-accent">
+                    <p className="font-mono text-xs text-accent">
+                        /// RENDERING SYSTEM STATE AS DIRECTED ACYCLIC GRAPH...
+                    </p>
+                    <MermaidSolutions 
+                        code={graphCode}
+                        onExecute={() => {}} 
+                        terminalLines={["Parsing particle state...", "Mapping lineage...", "Graph generated."]}
+                    />
+                </div>
+            </PaperModal>
         </div>
     );
 };

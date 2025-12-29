@@ -24,8 +24,8 @@ const RealityAnchor: React.FC<RealityAnchorProps> = ({ onTrigger }) => {
                         className="bg-accent text-ink border-l-2 border-y-2 border-ink shadow-[-4px_4px_0px_0px_rgba(24,24,27,1)] hover:shadow-[-6px_6px_0px_0px_rgba(24,24,27,1)] hover:pr-3 transition-all py-4 px-2 flex flex-col items-center gap-3 rounded-l-sm"
                     >
                          <LogOut className="w-5 h-5" />
-                         <span className="[writing-mode:vertical-rl] rotate-180 font-mono text-xs font-bold tracking-widest uppercase">
-                            Emergency Exit
+                         <span className="[writing-mode:vertical-rl] rotate-180 font-mono text-xs font-bold tracking-widest uppercase whitespace-nowrap">
+                            Eject (rm -rf /tmp/Me)
                         </span>
                     </motion.button>
                 ) : (
